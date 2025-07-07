@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Form, FormGroup, Label, Input } from "reactstrap";
 import { tarotDeck } from "../data/tarotDeck";
 import type { TarotCard } from "../data/tarotDeck";
+import { FaSpinner } from "react-icons/fa";
 
 const NewReading: React.FC = () => {
     const [reason, setReason] = useState("");
     const [readingType, setReadingType] = useState<number>(3);
     const [deck, setDeck] = useState<TarotCard[]>([]);
     const [flipped, setFlipped] = useState<boolean[]>([]);
+    const [isShuffling, setIsShuffling] = useState(false);
 
     function shuffle(array: TarotCard[]): TarotCard[] {
         const copy = [...array];
@@ -19,10 +21,15 @@ const NewReading: React.FC = () => {
     }
 
     const handleShuffle = () => {
-        const shuffled = shuffle(tarotDeck);
-        const selected = shuffled.slice(0, readingType);
-        setDeck(selected);
-        setFlipped(new Array(readingType).fill(false));
+        setIsShuffling(true);
+
+        setTimeout(() => {
+            const shuffled = shuffle(tarotDeck);
+            const selected = shuffled.slice(0, readingType);
+            setDeck(selected);
+            setFlipped(new Array(readingType).fill(false));
+            setIsShuffling(false);
+        }, 1500); // 1.5 segundos de "embaralhamento"
     };
 
     return (
@@ -84,8 +91,19 @@ const NewReading: React.FC = () => {
             </div>
 
             <div className="text-center mt-3">
-                <button className="btn btn-warning" onClick={handleShuffle}>
-                    Embaralhar baralho
+                <button
+                    className="btn btn-warning"
+                    onClick={handleShuffle}
+                    disabled={isShuffling}
+                >
+                    {isShuffling ? (
+                        <>
+                            <FaSpinner className="me-2 spin" />
+                            Embaralhando...
+                        </>
+                    ) : (
+                        "Embaralhar baralho"
+                    )}
                 </button>
             </div>
 
