@@ -5,6 +5,7 @@ import type { TarotCard } from "../data/tarotDeck";
 
 const NewReading: React.FC = () => {
     const [reason, setReason] = useState("");
+    const [readingType, setReadingType] = useState<number>(3);
     const [deck] = useState<TarotCard[]>(() => shuffle(tarotDeck).slice(0, 10));
 
     function shuffle(array: TarotCard[]): TarotCard[] {
@@ -20,6 +21,20 @@ const NewReading: React.FC = () => {
         <div>
             <h2>Nova Tiragem</h2>
             <Form>
+                <FormGroup>
+                    <Label for="readingType">Escolha o tipo de tiragem:</Label>
+                    <Input
+                        type="select"
+                        id="readingType"
+                        value={readingType}
+                        onChange={(e) => setReadingType(Number(e.target.value))}
+                    >
+                        <option value={1}>1 carta</option>
+                        <option value={3}>3 cartas</option>
+                        <option value={10}>10 cartas (Cruz Celta)</option>
+                    </Input>
+                </FormGroup>
+
                 <FormGroup>
                     <Label for="reason">
                         Por que você está fazendo essa tiragem?
