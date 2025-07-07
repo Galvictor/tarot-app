@@ -7,9 +7,12 @@ import { FaSpinner } from "react-icons/fa";
 const NewReading: React.FC = () => {
     const [reason, setReason] = useState("");
     const [readingType, setReadingType] = useState<number>(3);
+    const [viewStep, setViewStep] = useState<
+        "pre-shuffle" | "shuffling" | "selecting"
+    >("pre-shuffle");
     const [deck, setDeck] = useState<TarotCard[]>([]);
     const [flipped, setFlipped] = useState<boolean[]>([]);
-    const [isShuffling, setIsShuffling] = useState(false);
+    const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
 
     function shuffle(array: TarotCard[]): TarotCard[] {
         const copy = [...array];
@@ -21,15 +24,26 @@ const NewReading: React.FC = () => {
     }
 
     const handleShuffle = () => {
-        setIsShuffling(true);
+        setViewStep("shuffling");
 
+        // vira todas para baixo primeiro
         setTimeout(() => {
             const shuffled = shuffle(tarotDeck);
-            const selected = shuffled.slice(0, readingType);
-            setDeck(selected);
-            setFlipped(new Array(readingType).fill(false));
-            setIsShuffling(false);
-        }, 1500); // 1.5 segundos de "embaralhamento"
+            setDeck(shuffled);
+            setFlipped(new Array(shuffled.length).fill(false));
+            setSelectedCards([]);
+            setViewStep("selecting");
+        }, 1500);
+    };
+
+    const handleCardClick = (index: number) => {
+        if (flipped[index]) return;
+        if (selectedCards.length >= readingType) return;
+
+        const newFlipped = [...flipped];
+        newFlipped[index] = true;
+        setFlipped(newFlipped);
+        setSelectedCards([...selectedCards, deck[index]]);
     };
 
     return (
@@ -43,6 +57,7 @@ const NewReading: React.FC = () => {
                         id="readingType"
                         value={readingType}
                         onChange={(e) => setReadingType(Number(e.target.value))}
+                        disabled={viewStep !== "pre-shuffle"}
                     >
                         <option value={1}>1 carta</option>
                         <option value={3}>3 cartas</option>
@@ -61,53 +76,77 @@ const NewReading: React.FC = () => {
                         onChange={(e) => setReason(e.target.value)}
                         placeholder="Ex: Estou com dúvidas sobre meu futuro profissional..."
                         rows={3}
+                        disabled={viewStep !== "pre-shuffle"}
                     />
                 </FormGroup>
             </Form>
 
-            <h5 className="mt-4">Cartas disponíveis:</h5>
-            <div className="d-flex flex-wrap justify-content-center">
-                {tarotDeck.map((card) => (
-                    <div
-                        key={card.id}
-                        style={{
-                            width: 100,
-                            margin: 6,
-                            textAlign: "center",
-                        }}
-                    >
-                        <img
-                            src={card.image}
-                            alt={card.name}
-                            style={{
-                                width: "100%",
-                                borderRadius: 4,
-                                boxShadow: "0 0 4px rgba(0,0,0,0.3)",
-                            }}
-                        />
-                        <small>{card.name}</small>
+            {viewStep === "pre-shuffle" && (
+                <>
+                    <h5 className="mt-4">Cartas disponíveis:</h5>
+                    <div className="d-flex flex-wrap justify-content-center">
+                        {tarotDeck.map((card) => (
+                            <div
+                                key={card.id}
+                                style={{
+                                    width: 100,
+                                    margin: 6,
+                                    textAlign: "center",
+                                }}
+                            >
+                                <img
+                                    src={card.image}
+                                    alt={card.name}
+                                    style={{
+                                        width: "100%",
+                                        borderRadius: 4,
+                                        boxShadow: "0 0 4px rgba(0,0,0,0.3)",
+                                    }}
+                                />
+                                <small>{card.name}</small>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            <div className="text-center mt-3">
-                <button
-                    className="btn btn-warning"
-                    onClick={handleShuffle}
-                    disabled={isShuffling}
-                >
-                    {isShuffling ? (
-                        <>
-                            <FaSpinner className="me-2 spin" />
-                            Embaralhando...
-                        </>
-                    ) : (
-                        "Embaralhar baralho"
-                    )}
-                </button>
-            </div>
+                    <div className="text-center mt-3">
+                        <button
+                            className="btn btn-warning"
+                            onClick={handleShuffle}
+                        >
+                            Embaralhar baralho
+                        </button>
+                    </div>
+                </>
+            )}
 
-            {deck.length > 0 && (
+            {viewStep === "shuffling" && (
+                <div className="text-center mt-4">
+                    <h5>Embaralhando cartas...</h5>
+                    <div className="d-flex flex-wrap justify-content-center mt-3">
+                        {tarotDeck.map((_, i) => (
+                            <div
+                                key={i}
+                                style={{
+                                    width: 100,
+                                    height: 150,
+                                    margin: 6,
+                                    backgroundColor: "purple",
+                                    borderRadius: 6,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    color: "white",
+                                    fontSize: 30,
+                                }}
+                            >
+                                🔮
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {viewStep === "selecting" && (
                 <>
                     <h5 className="mt-4">Escolha {readingType} carta(s):</h5>
                     <div className="d-flex flex-wrap justify-content-center mt-2">
@@ -126,19 +165,29 @@ const NewReading: React.FC = () => {
                                     alignItems: "center",
                                     margin: 10,
                                     borderRadius: 8,
-                                    cursor: "pointer",
+                                    cursor: flipped[index]
+                                        ? "default"
+                                        : selectedCards.length < readingType
+                                        ? "pointer"
+                                        : "not-allowed",
                                     fontSize: 24,
                                     boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                                    transition: "transform 0.3s",
                                 }}
-                                onClick={() => {
-                                    if (!flipped[index]) {
-                                        const newFlipped = [...flipped];
-                                        newFlipped[index] = true;
-                                        setFlipped(newFlipped);
-                                    }
-                                }}
+                                onClick={() => handleCardClick(index)}
                             >
-                                {flipped[index] ? card.name : "🔮"}
+                                {flipped[index] ? (
+                                    <span
+                                        style={{
+                                            padding: 8,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        {card.name}
+                                    </span>
+                                ) : (
+                                    "🔮"
+                                )}
                             </div>
                         ))}
                     </div>
