@@ -10,3 +10,25 @@
         transform: rotate(360deg);
     }
 }
+
+.card-back {
+    animation: shuffleCard 1.5s ease-in-out;
+}
+
+@keyframes shuffleCard {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(-10deg);
+    }
+    50% {
+        transform: translateY(10px) rotate(10deg);
+    }
+    75% {
+        transform: translateY(-5px) rotate(-5deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}

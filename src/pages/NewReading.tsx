@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, FormGroup, Label, Input } from "reactstrap";
 import { tarotDeck } from "../data/tarotDeck";
 import type { TarotCard } from "../data/tarotDeck";
-import { FaSpinner } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 const NewReading: React.FC = () => {
     const [reason, setReason] = useState("");
@@ -13,6 +13,7 @@ const NewReading: React.FC = () => {
     const [deck, setDeck] = useState<TarotCard[]>([]);
     const [flipped, setFlipped] = useState<boolean[]>([]);
     const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
+    const [shufflingDeck, setShufflingDeck] = useState<TarotCard[]>(tarotDeck);
 
     function shuffle(array: TarotCard[]): TarotCard[] {
         const copy = [...array];
@@ -45,6 +46,23 @@ const NewReading: React.FC = () => {
         setFlipped(newFlipped);
         setSelectedCards([...selectedCards, deck[index]]);
     };
+
+    useEffect(() => {
+        if (viewStep === "shuffling") {
+            const interval = setInterval(() => {
+                setShufflingDeck(shuffle(tarotDeck));
+            }, 300);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                const finalDeck = shuffle(tarotDeck);
+                setDeck(finalDeck);
+                setFlipped(new Array(finalDeck.length).fill(false));
+                setSelectedCards([]);
+                setViewStep("selecting");
+            }, 1500);
+        }
+    }, [viewStep]);
 
     return (
         <div>
@@ -123,9 +141,16 @@ const NewReading: React.FC = () => {
                 <div className="text-center mt-4">
                     <h5>Embaralhando cartas...</h5>
                     <div className="d-flex flex-wrap justify-content-center mt-3">
-                        {tarotDeck.map((_, i) => (
-                            <div
-                                key={i}
+                        {shuffle(tarotDeck).map((card) => (
+                            <motion.div
+                                key={card.id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: "easeInOut",
+                                }}
                                 style={{
                                     width: 100,
                                     height: 150,
@@ -137,10 +162,11 @@ const NewReading: React.FC = () => {
                                     alignItems: "center",
                                     color: "white",
                                     fontSize: 30,
+                                    boxShadow: "0 0 5px rgba(0,0,0,0.2)",
                                 }}
                             >
                                 🔮
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
